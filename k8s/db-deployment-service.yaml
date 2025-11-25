@@ -1,7 +1,11 @@
+---
+# postgres-service.yaml
 apiVersion: v1
 kind: Service
 metadata:
   name: postgres-service
+  # 👇 ADDED: Define the target namespace
+  namespace: tictactoe
   labels:
     app: postgres
 spec:
@@ -13,10 +17,13 @@ spec:
       targetPort: 5432
   type: ClusterIP
 ---
+# postgres-deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: postgres-deployment
+  # 👇 ADDED: Define the target namespace
+  namespace: tictactoe
   labels:
     app: postgres
 spec:
@@ -36,8 +43,11 @@ spec:
         - containerPort: 5432
         env:
         - name: POSTGRES_DB
-          value: mydatabase
+          # 👇 UPDATED: Must match the backend container's environment variable
+          value: tictactoe_db
         - name: POSTGRES_USER
-          value: myuser
+          # 👇 UPDATED: Must match the backend container's environment variable
+          value: tictactoe_user
         - name: POSTGRES_PASSWORD
+          # ⚠️ WARNING: Use a Secret for production!
           value: mypassword
