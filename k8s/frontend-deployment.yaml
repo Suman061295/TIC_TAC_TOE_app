@@ -17,8 +17,9 @@ spec:
     spec:
       containers:
       - name: frontend-container
-        image: simple-frontend # Jenkins replaces this tag
+        image: suman061295/simple-frontend:9
         ports:
         - containerPort: 80
+
 
 
