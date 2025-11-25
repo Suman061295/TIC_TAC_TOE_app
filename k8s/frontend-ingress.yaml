@@ -9,8 +9,7 @@ metadata:
     nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
   rules:
-  - host: myapp.local # Optional: Use a specific domain name
-    http:
+  - http:
       paths:
       # 1. Route for static content and frontend UI
       - path: /
@@ -29,4 +28,5 @@ spec:
           service:
             name: backend-service 
             port:
+
               number: 8080
