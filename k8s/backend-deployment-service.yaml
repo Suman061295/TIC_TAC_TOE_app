@@ -32,8 +32,9 @@ spec:
     spec:
       containers:
       - name: backend-container
-        image: backend-placeholder-image # Jenkins replaces this tag
+        image: simple-backend:9
         ports:
         - containerPort: 5000 
         # --- Environment variables for DB are removed ---
+
         # --- If you want to use Redis for sessions, you would configure it here ---
