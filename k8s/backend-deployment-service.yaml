@@ -34,12 +34,13 @@ spec:
     spec:
       containers:
       - name: backend-container
-        image: simple-backend
+        image: suman061295/simple-backend:9
         ports:
         - containerPort: 5000 
         # --- Environment variables for DB are removed ---
 
         # --- If you want to use Redis for sessions, you would configure it here ---
+
 
 
 
