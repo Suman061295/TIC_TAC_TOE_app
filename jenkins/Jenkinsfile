@@ -1,40 +1,53 @@
-// jenkins/Jenkinsfile
+// jenkins/Jenkinsfile (Corrected Declarative Pipeline Structure)
 pipeline {
     agent any
-    
-// Define variables here (use uppercase for convention)
+
+    // --- Configuration ---
+    // Variables must be defined within the 'environment' block for global access
     environment {
-        DOCKER_REGISTRY = "suman061295"
-        FRONTEND_IMAGE  = "${DOCKER_REGISTRY}/simple-frontend:${env.BUILD_ID}"
-        BACKEND_IMAGE   = "${DOCKER_REGISTRY}/simple-backend:${env.BUILD_ID}"
-        DOCKER_CREDENTIALS_ID = 'DOCKER_CREDS' 
+        // The DOCKER_REGISTRY must be replaced with your actual Docker Hub username
+        DOCKER_REGISTRY = "suman061295" 
+        
+        // Image names derived from the registry and build ID (available as env variables)
+        FRONTEND_IMAGE  = "${env.DOCKER_REGISTRY}/simple-frontend:${env.BUILD_ID}"
+        BACKEND_IMAGE   = "${env.DOCKER_REGISTRY}/simple-backend:${env.BUILD_ID}"
+        
+        // Jenkins credential ID for Docker Hub login (Username/Password)
+        DOCKER_CREDENTIALS_ID = 'docker-hub-creds'
     }
-    
+
     stages {
         stage('Checkout Code') {
             steps {
+                // Use the standard checkout step
                 checkout scm 
             }
         }
         
         stage('Build & Tag Images') {
             steps {
-                script {
-                    echo "Building Frontend image: ${frontendImage}"
-                    sh "docker build -t ${frontendImage} -f frontend/Dockerfile ."
-                    echo "Building Backend image: ${backendImage}"
-                    sh "docker build -t ${backendImage} -f backend/Dockerfile ."
-                }
+                // No 'script' block is needed here. Commands can use environment variables directly.
+                echo "Building Frontend image: ${env.FRONTEND_IMAGE}"
+                sh "docker build -t ${env.FRONTEND_IMAGE} -f frontend/Dockerfile ."
+                
+                echo "Building Backend image: ${env.BACKEND_IMAGE}"
+                sh "docker build -t ${env.BACKEND_IMAGE} -f backend/Dockerfile ."
             }
         }
 
         stage('Push Docker Images') {
             steps {
+                // Use withCredentials to securely inject Docker Hub username and password
                 withCredentials([usernamePassword(credentialsId: env.DOCKER_CREDENTIALS_ID, passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
                     echo "Logging into Docker Hub..."
+                    // Use sh commands with the securely injected variables
                     sh "echo \"$DOCKER_PASSWORD\" | docker login -u \"$DOCKER_USERNAME\" --password-stdin"
-                    sh "docker push ${frontendImage}"
-                    sh "docker push ${backendImage}"
+                    
+                    sh "docker push ${env.FRONTEND_IMAGE}"
+                    sh "docker push ${env.BACKEND_IMAGE}"
+                    
+                    // Optional: Logout after pushing
+                    sh "docker logout" 
                 }
             }
         }
@@ -43,17 +56,16 @@ pipeline {
             steps {
                 script {
                     echo "Updating Kubernetes manifests with new image tags..."
-                    // Update image tags in deployment manifests (Deployment files are now separate)
-                    sh "sed -i 's|image: frontend-placeholder-image|image: ${frontendImage}|g' k8s/frontend-deployment.yaml"
-                    sh "sed -i 's|image: backend-placeholder-image|image: ${backendImage}|g' k8s/backend-deployment-service.yaml"
+                    
+                    // --- SED commands to update image names in manifests ---
+                    // NOTE: These 'sed' commands must use the variable name defined in the environment block.
+                    sh "sed -i 's|image: frontend-placeholder-image|image: ${env.FRONTEND_IMAGE}|g' k8s/frontend-deployment.yaml"
+                    sh "sed -i 's|image: backend-placeholder-image|image: ${env.BACKEND_IMAGE}|g' k8s/backend-deployment-service.yaml"
                     
                     echo "Applying Kubernetes manifests..."
-                    // Apply all files in the k8s directory, including the new Ingress
                     sh "kubectl apply -f k8s/"
                 }
             }
         }
     }
-
 }
-
