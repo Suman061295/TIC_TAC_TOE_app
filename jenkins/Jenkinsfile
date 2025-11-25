@@ -2,16 +2,14 @@
 pipeline {
     agent any
     
-    // --- Configuration ---
-    def dockerRegistry = "suman061295" 
-    def frontendImage = "${dockerRegistry}/simple-frontend:${env.BUILD_ID}"
-    def backendImage = "${dockerRegistry}/simple-backend:${env.BUILD_ID}"
-    
+// Define variables here (use uppercase for convention)
     environment {
-        // Jenkins credential ID for Docker Hub login (Username/Password)
+        DOCKER_REGISTRY = "suman061295"
+        FRONTEND_IMAGE  = "${DOCKER_REGISTRY}/simple-frontend:${env.BUILD_ID}"
+        BACKEND_IMAGE   = "${DOCKER_REGISTRY}/simple-backend:${env.BUILD_ID}"
         DOCKER_CREDENTIALS_ID = 'DOCKER_CREDS' 
     }
-
+    
     stages {
         stage('Checkout Code') {
             steps {
@@ -58,3 +56,4 @@ pipeline {
     }
 
 }
+
