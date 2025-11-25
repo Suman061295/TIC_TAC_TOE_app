@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: frontend-deployment
+  namespace: tictactoe
   labels:
     app: frontend
 spec:
@@ -19,3 +20,4 @@ spec:
         image: simple-frontend:9 # Jenkins replaces this tag
         ports:
         - containerPort: 80
+
