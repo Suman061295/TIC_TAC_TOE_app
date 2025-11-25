@@ -61,12 +61,10 @@ pipeline {
                     // NOTE: These 'sed' commands must use the variable name defined in the environment block.
                     sh "sed -i 's|image: frontend-placeholder-image|image: ${env.FRONTEND_IMAGE}|g' k8s/frontend-deployment.yaml"
                     sh "sed -i 's|image: backend-placeholder-image|image: ${env.BACKEND_IMAGE}|g' k8s/backend-deployment-service.yaml"
-                    
-                    echo "Applying Kubernetes manifests..."
-                    sh "kubectl apply -f k8s/"
                 }
             }
         }
     }
 }
+
 
