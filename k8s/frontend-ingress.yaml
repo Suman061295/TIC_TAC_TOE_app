@@ -2,6 +2,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: simple-3-tier-ingress
+  namespace: tictactoe
   annotations:
     kubernetes.io/ingress.class: nginx 
     # This annotation is crucial for telling NGINX to strip the /api path 
@@ -30,3 +31,4 @@ spec:
             port:
 
               number: 8080
+
