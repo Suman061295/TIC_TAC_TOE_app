@@ -3,13 +3,13 @@ pipeline {
     agent any
     
     // --- Configuration ---
-    def dockerRegistry = "your-dockerhub-username" 
+    def dockerRegistry = "suman061295" 
     def frontendImage = "${dockerRegistry}/simple-frontend:${env.BUILD_ID}"
     def backendImage = "${dockerRegistry}/simple-backend:${env.BUILD_ID}"
     
     environment {
         // Jenkins credential ID for Docker Hub login (Username/Password)
-        DOCKER_CREDENTIALS_ID = 'docker-hub-creds' 
+        DOCKER_CREDENTIALS_ID = 'DOCKER_CREDS' 
     }
 
     stages {
@@ -56,4 +56,5 @@ pipeline {
             }
         }
     }
+
 }
