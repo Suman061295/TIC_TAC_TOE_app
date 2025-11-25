@@ -13,7 +13,7 @@ pipeline {
         BACKEND_IMAGE   = "${env.DOCKER_REGISTRY}/simple-backend:${env.BUILD_ID}"
         
         // Jenkins credential ID for Docker Hub login (Username/Password)
-        DOCKER_CREDENTIALS_ID = 'docker-hub-creds'
+        DOCKER_CREDENTIALS_ID = 'DOCKER_CREDS'
     }
 
     stages {
@@ -69,3 +69,4 @@ pipeline {
         }
     }
 }
+
