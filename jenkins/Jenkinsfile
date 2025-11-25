@@ -1,0 +1,59 @@
+// jenkins/Jenkinsfile
+pipeline {
+    agent any
+    
+    // --- Configuration ---
+    def dockerRegistry = "your-dockerhub-username" 
+    def frontendImage = "${dockerRegistry}/simple-frontend:${env.BUILD_ID}"
+    def backendImage = "${dockerRegistry}/simple-backend:${env.BUILD_ID}"
+    
+    environment {
+        // Jenkins credential ID for Docker Hub login (Username/Password)
+        DOCKER_CREDENTIALS_ID = 'docker-hub-creds' 
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                checkout scm 
+            }
+        }
+        
+        stage('Build & Tag Images') {
+            steps {
+                script {
+                    echo "Building Frontend image: ${frontendImage}"
+                    sh "docker build -t ${frontendImage} -f frontend/Dockerfile ."
+                    echo "Building Backend image: ${backendImage}"
+                    sh "docker build -t ${backendImage} -f backend/Dockerfile ."
+                }
+            }
+        }
+
+        stage('Push Docker Images') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: env.DOCKER_CREDENTIALS_ID, passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
+                    echo "Logging into Docker Hub..."
+                    sh "echo \"$DOCKER_PASSWORD\" | docker login -u \"$DOCKER_USERNAME\" --password-stdin"
+                    sh "docker push ${frontendImage}"
+                    sh "docker push ${backendImage}"
+                }
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                script {
+                    echo "Updating Kubernetes manifests with new image tags..."
+                    // Update image tags in deployment manifests (Deployment files are now separate)
+                    sh "sed -i 's|image: frontend-placeholder-image|image: ${frontendImage}|g' k8s/frontend-deployment.yaml"
+                    sh "sed -i 's|image: backend-placeholder-image|image: ${backendImage}|g' k8s/backend-deployment-service.yaml"
+                    
+                    echo "Applying Kubernetes manifests..."
+                    // Apply all files in the k8s directory, including the new Ingress
+                    sh "kubectl apply -f k8s/"
+                }
+            }
+        }
+    }
+}

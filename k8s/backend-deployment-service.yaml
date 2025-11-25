@@ -1,0 +1,39 @@
+# ... (Service definition remains the same)
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+  labels:
+    app: backend
+spec:
+  selector:
+    app: backend
+  ports:
+    - protocol: TCP
+      port: 8080 
+      targetPort: 5000 
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+  labels:
+    app: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend-container
+        image: backend-placeholder-image # Jenkins replaces this tag
+        ports:
+        - containerPort: 5000 
+        # --- Environment variables for DB are removed ---
+        # --- If you want to use Redis for sessions, you would configure it here ---
