@@ -20,6 +20,3 @@ spec:
         image: suman061295/simple-frontend:9
         ports:
         - containerPort: 80
-
-
-
