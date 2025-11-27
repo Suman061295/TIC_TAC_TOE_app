@@ -36,9 +36,3 @@ spec:
         image: suman061295/simple-backend:9
         ports:
         - containerPort: 5000 
-
-
-
-
-
-
