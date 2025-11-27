@@ -1,18 +1,10 @@
-// jenkins/Jenkinsfile (Corrected Declarative Pipeline Structure)
 pipeline {
     agent any
-
-    // --- Configuration ---
-    // Variables must be defined within the 'environment' block for global access
     environment {
         // The DOCKER_REGISTRY must be replaced with your actual Docker Hub username
         DOCKER_REGISTRY = "suman061295" 
-        
-        // Image names derived from the registry and build ID (available as env variables)
         FRONTEND_IMAGE  = "${env.DOCKER_REGISTRY}/simple-frontend:${env.BUILD_ID}"
         BACKEND_IMAGE   = "${env.DOCKER_REGISTRY}/simple-backend:${env.BUILD_ID}"
-        
-        // Jenkins credential ID for Docker Hub login (Username/Password)
         DOCKER_CREDENTIALS_ID = 'DOCKER_CREDS'
     }
 
@@ -26,10 +18,8 @@ pipeline {
         
         stage('Build & Tag Images') {
             steps {
-                // No 'script' block is needed here. Commands can use environment variables directly.
                 echo "Building Frontend image: ${env.FRONTEND_IMAGE}"
                 sh "docker build -t ${env.FRONTEND_IMAGE} -f frontend/Dockerfile ."
-                
                 echo "Building Backend image: ${env.BACKEND_IMAGE}"
                 sh "docker build -t ${env.BACKEND_IMAGE} -f backend/Dockerfile ."
             }
@@ -37,28 +27,19 @@ pipeline {
 
         stage('Push Docker Images') {
             steps {
-                // Use withCredentials to securely inject Docker Hub username and password
                 withCredentials([usernamePassword(credentialsId: env.DOCKER_CREDENTIALS_ID, passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
                     echo "Logging into Docker Hub..."
-                    // Use sh commands with the securely injected variables
                     sh "echo \"$DOCKER_PASSWORD\" | docker login -u \"$DOCKER_USERNAME\" --password-stdin"
-                    
                     sh "docker push ${env.FRONTEND_IMAGE}"
                     sh "docker push ${env.BACKEND_IMAGE}"
-                    
-                    // Optional: Logout after pushing
                     sh "docker logout" 
                 }
             }
         }
-
         stage('Deploy to Kubernetes') {
             steps {
                 script {
                     echo "Updating Kubernetes manifests with new image tags..."
-                    
-                    // --- SED commands to update image names in manifests ---
-                    // NOTE: These 'sed' commands must use the variable name defined in the environment block.
                     sh "sed -i 's|image: frontend-placeholder-image|image: ${env.FRONTEND_IMAGE}|g' k8s/frontend-deployment.yaml"
                     sh "sed -i 's|image: backend-placeholder-image|image: ${env.BACKEND_IMAGE}|g' k8s/backend-deployment-service.yaml"
                 }
@@ -66,5 +47,3 @@ pipeline {
         }
     }
 }
-
-
