@@ -10,7 +10,6 @@ metadata:
 spec:
   ingressClassName: nginx 
   rules:
-  # 👇 REMOVED: - host: tictactoe.local
   - http:
       paths:
       # 1. Route for static content 
