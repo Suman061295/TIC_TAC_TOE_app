@@ -1,17 +1,9 @@
 name: CI/CD Pipeline - Docker Build, Push, and Deploy
-# The workflow will run on every push to the 'main' branch
-on:
-  push:
-    branches:
-      - main
-
-# Define the global, independent environment variables for the workflow
+on: workflow_dispatch
 env:
-  # Replace 'suman061295' with your actual Docker Hub username/registry
   DOCKER_REGISTRY: suman061295
-  # Use GitHub's run ID as the unique build tag (similar to Jenkins' BUILD_ID)
   BUILD_TAG: ${{ github.run_id }}
-
+  
 jobs:
   build_and_push:
     runs-on: ubuntu-latest
@@ -20,23 +12,20 @@ jobs:
     # Stage: Checkout Code
     # ----------------------------------------------------
     steps:
-      - name: ⬇️ Checkout Code
+      - name: Checkout Code
         uses: actions/checkout@v4
       
-      # The full image name is constructed inside the 'run' step to avoid the YAML context issue.
       # ----------------------------------------------------
       # Stage: Build & Tag Images
       # ----------------------------------------------------
-      - name: 🛠️ Build Frontend Image
+      - name:  Build Frontend Image
         run: |
-          # Define local variables for readability inside the shell script
           FRONTEND_IMAGE=${{ env.DOCKER_REGISTRY }}/simple-frontend:${{ env.BUILD_TAG }}
           echo "Building Frontend image: $FRONTEND_IMAGE"
           docker build -t $FRONTEND_IMAGE -f frontend/Dockerfile .
-          # Store the image name for later steps if needed (though not strictly necessary here)
           echo "FRONTEND_IMAGE=$FRONTEND_IMAGE" >> $GITHUB_ENV
 
-      - name: 🛠️ Build Backend Image
+      - name: Build Backend Image
         run: |
           BACKEND_IMAGE=${{ env.DOCKER_REGISTRY }}/simple-backend:${{ env.BUILD_TAG }}
           echo "Building Backend image: $BACKEND_IMAGE"
@@ -46,30 +35,23 @@ jobs:
       # ----------------------------------------------------
       # Stage: Push Docker Images (Authentication)
       # ----------------------------------------------------
-      - name: 🔑 Login to Docker Hub
-        # This replaces the Jenkins `withCredentials` block
+      - name:  Login to Docker Hub
         uses: docker/login-action@v3
         with:
-          # Use secrets for secure authentication
           username: ${{ secrets.DOCKER_USERNAME }} 
           password: ${{ secrets.DOCKER_PASSWORD }} 
 
-      - name: 🚀 Push Frontend Image
-        # Use the variable set in the GITHUB_ENV in the build step
+      - name: Push Frontend Image
         run: docker push ${{ env.FRONTEND_IMAGE }}
 
-      - name: 🚀 Push Backend Image
+      - name: Push Backend Image
         run: docker push ${{ env.BACKEND_IMAGE }}
         
       # ----------------------------------------------------
       # Stage: Deploy to Kubernetes (Image Tag Update)
       # ----------------------------------------------------
-      - name: 🔄 Update and Apply Kubernetes Manifests
-        # This is where the placeholders in the k8s files are replaced with the new image tags
+      - name: Update and Apply Kubernetes Manifests
         run: |
           echo "Updating Kubernetes manifests with new image tags..."
           sed -i 's|image: frontend-placeholder-image|image: ${{ env.FRONTEND_IMAGE }}|g' k8s/frontend-deployment.yaml
           sed -i 's|image: backend-placeholder-image|image: ${{ env.BACKEND_IMAGE }}|g' k8s/backend-deployment-service.yaml
-          
-          # Add actual deployment steps here (e.g., running kubectl)
-          # kubectl apply -f k8s/
